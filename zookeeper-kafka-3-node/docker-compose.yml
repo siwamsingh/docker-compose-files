@@ -1,0 +1,96 @@
+# docker compose file for 3 node zookeeper with 3 broker kafka cluster
+# replace  <<your-ip-adress>>  with your static ip or localhost
+
+version: '3.7'
+services:
+  zoo1:
+    image: zookeeper:3.9.1
+    container_name: zoo1
+    restart: always
+    hostname: zoo1
+    ports:
+      - 2181:2181
+    environment:
+      ZOO_4LW_COMMANDS_WHITELIST: mntr,conf,ruok,*
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=0.0.0.0:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181
+    volumes:
+      - 'zoo1_data:/data'
+
+  zoo2:
+    image: zookeeper:3.9.1
+    container_name: zoo2
+    restart: always
+    hostname: zoo2
+    ports:
+      - 2182:2181
+    environment:
+      ZOO_4LW_COMMANDS_WHITELIST: mntr,conf,ruok,*
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=0.0.0.0:2888:3888;2181 server.3=zoo3:2888:3888;2181
+    volumes:
+      - 'zoo2_data:/data'
+
+  zoo3:
+    image: zookeeper:3.9.1
+    container_name: zoo3
+    restart: always
+    hostname: zoo3
+    ports:
+      - 2183:2181
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=0.0.0.0:2888:3888;2181
+      ZOO_4LW_COMMANDS_WHITELIST: mntr,conf,ruok,*
+    volumes:
+      - 'zoo3_data:/data'
+
+  kafka1:
+    image: wurstmeister/kafka:latest
+    container_name: kafka1
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT:// <<your-ip-adress>> :9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_LOG_DIRS: /kafka/kafka-logs-kafka1
+    volumes:
+      - 'kafka1_data:/kafka'
+
+  kafka2:
+    image: wurstmeister/kafka:latest
+    container_name: kafka2
+    ports:
+      - 9093:9093
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT:// <<your-ip-adress>> :9093
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093
+      KAFKA_LOG_DIRS: /kafka/kafka-logs-kafka2
+    volumes:
+      - 'kafka2_data:/kafka'
+
+  kafka3:
+    image: wurstmeister/kafka:latest
+    container_name: kafka3
+    ports:
+      - 9094:9094
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT:// <<your-ip-adress>> :9094
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9094
+      KAFKA_LOG_DIRS: /kafka/kafka-logs-kafka3
+    volumes:
+      - 'kafka3_data:/kafka'
+
+volumes:
+  zoo1_data:
+  zoo2_data:
+  zoo3_data:
+  kafka1_data:
+  kafka2_data:
+  kafka3_data:
