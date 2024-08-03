@@ -1,0 +1,33 @@
+# docker compose file for one node zookeeper file with one node kafka
+
+version: '3.8'
+services:
+  zookeeper:
+    image: zookeeper:3.9.1
+    ports:
+      - "2181:2181"
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_CLIENT_PORT: 2181
+      ZOO_4LW_COMMANDS_WHITELIST: "*"
+    # ZOO_MY_ID: The unique ID for this Zookeeper node
+    # ZOO_CLIENT_PORT: The port on which Zookeeper will listen for client connections
+    # ZOO_4LW_COMMANDS_WHITELIST: Enable all 4-letter word commands
+
+  kafka:
+    image: wurstmeister/kafka:latest
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+    # KAFKA_ZOOKEEPER_CONNECT: The connection string for Zookeeper
+    # KAFKA_ADVERTISED_LISTENERS: The address that Kafka advertises to clients
+    # KAFKA_LISTENERS: The address Kafka will bind to for listening
+    # KAFKA_BROKER_ID: The unique ID for this Kafka broker
+    # KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: Replication factor for the Kafka offsets topic
